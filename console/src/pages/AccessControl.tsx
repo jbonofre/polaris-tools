@@ -6,14 +6,18 @@ import { PrincipalsTab } from "@/components/users/PrincipalsTab"
 import { PrincipalRolesTab } from "@/components/users/PrincipalRolesTab"
 import { CatalogRolesTab } from "@/components/users/CatalogRolesTab"
 import { PrivilegesTab } from "@/components/users/PrivilegesTab"
+import { AccessOverviewTab } from "@/components/users/AccessOverviewTab"
+import { AccessMapTab } from "@/components/users/AccessMapTab"
 
 export function AccessControl() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = searchParams.get("tab") || "principals"
+  const activeTab = searchParams.get("tab") || "overview"
 
   useEffect(() => {
     // Update document title based on active tab
     const tabTitles: Record<string, string> = {
+      overview: "Overview",
+      "access-map": "Access Map",
       principals: "Principals",
       "principal-roles": "Principal Roles",
       "catalog-roles": "Catalog Roles",
@@ -39,14 +43,24 @@ export function AccessControl() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="flex justify-center">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <div className="flex justify-center overflow-x-auto">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="access-map">Access Map</TabsTrigger>            
             <TabsTrigger value="principals">Principals</TabsTrigger>
             <TabsTrigger value="principal-roles">Principal Roles</TabsTrigger>
             <TabsTrigger value="catalog-roles">Catalog Roles</TabsTrigger>
             <TabsTrigger value="privileges">Privileges</TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="overview" className="mt-6">
+          <AccessOverviewTab />
+        </TabsContent>
+
+        <TabsContent value="access-map" className="mt-6">
+          <AccessMapTab />
+        </TabsContent>
 
         <TabsContent value="principals" className="mt-6">
           <PrincipalsTab />
