@@ -50,6 +50,7 @@ export const authApi = {
     // Internal auth uses scope, external (Keycloak) uses grant_type
     if (authType === "internal") {
       formData.append("scope", "PRINCIPAL_ROLE:ALL")
+      formData.append("grant_type", "client_credentials")
     } else {
       formData.append("grant_type", "client_credentials")
     }
