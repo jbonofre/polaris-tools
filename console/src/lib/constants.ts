@@ -40,6 +40,17 @@ export const CATALOG_TYPES = [
   { value: "EXTERNAL", label: "External" },
 ] as const
 
+export const AUTH_TYPES = [
+  { value: "internal", label: "Internal" },
+  { value: "keycloak", label: "Keycloak" },
+] as const
+
+// Keycloak server base URL configuration
+// Defaults to "http://keycloak:8080" if not specified in environment variables
+// Can be configured via VITE_KEYCLOAK_URL environment variable
+export const DEFAULT_KEYCLOAK_URL =
+  import.meta.env.VITE_KEYCLOAK_URL || "http://keycloak:8080"
+
 export const NAV_ITEMS = [
   { path: "/", label: "Home", icon: "Home" },
   { path: "/connections", label: "Connections", icon: "Link" },

@@ -19,11 +19,17 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { toast } from "sonner"
-import { authApi } from "@/api/auth"
+import { authApi, type AuthType } from "@/api/auth"
 
 interface AuthContextType {
   isAuthenticated: boolean
-  login: (clientId: string, clientSecret: string, realm: string) => Promise<void>
+  login: (
+    clientId: string,
+    clientSecret: string,
+    authType: AuthType,
+    realm?: string,
+    polarisRealm?: string
+  ) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -41,13 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }, [])
 
-  const login = async (clientId: string, clientSecret: string, realm: string) => {
+  const login = async (
+    clientId: string,
+    clientSecret: string,
+    authType: AuthType,
+    realm?: string,
+    polarisRealm?: string
+  ) => {
     try {
-      // Store realm in localStorage
-      if (realm) {
-        localStorage.setItem("polaris_realm", realm)
+      // Store Polaris realm in localStorage if provided (use polarisRealm for keycloak, realm for internal)
+      const realmToStore = authType === "keycloak" ? polarisRealm : realm
+      if (realmToStore) {
+        localStorage.setItem("polaris_realm", realmToStore)
       }
-      await authApi.getToken(clientId, clientSecret, realm)
+      await authApi.getToken(clientId, clientSecret, authType, realm, polarisRealm)
       setIsAuthenticated(true)
     } catch (error) {
       setIsAuthenticated(false)
@@ -59,8 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.success("Logged out successfully")
     authApi.logout()
     setIsAuthenticated(false)
-    // Clear realm from localStorage on logout
+    // Clear realm and auth type from localStorage on logout
     localStorage.removeItem("polaris_realm")
+    localStorage.removeItem("polaris_auth_type")
   }
 
   return (

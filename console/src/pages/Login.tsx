@@ -24,13 +24,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Logo } from "@/components/layout/Logo"
+import { AUTH_TYPES } from "@/lib/constants"
+import type { AuthType } from "@/api/auth"
 
 export function Login() {
+  // Initialize auth type from environment variable or default to 'internal'
+  const [authType, setAuthType] = useState<AuthType>(
+    (import.meta.env.VITE_AUTH_TYPE as AuthType) || "internal"
+  )
   const [clientId, setClientId] = useState("")
   const [clientSecret, setClientSecret] = useState("")
-  // Initialize realm with value from .env file if present
-  const [realm, setRealm] = useState(import.meta.env.VITE_POLARIS_REALM || "")
+  // Initialize Polaris realm with value from .env file if present
+  const [polarisRealm, setPolarisRealm] = useState(import.meta.env.VITE_POLARIS_REALM || "")
+  // Initialize Keycloak realm (empty by default)
+  const [keycloakRealm, setKeycloakRealm] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
@@ -42,7 +57,14 @@ export function Login() {
     setLoading(true)
 
     try {
-      await login(clientId, clientSecret, realm)
+      const realm = authType === "internal" ? polarisRealm : keycloakRealm
+      await login(
+        clientId,
+        clientSecret,
+        authType,
+        realm || undefined,
+        authType === "keycloak" ? polarisRealm || undefined : undefined
+      )
       navigate("/")
     } catch (err) {
       setError(
@@ -71,6 +93,24 @@ export function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="authType">Authentication Type</Label>
+              <Select
+                value={authType}
+                onValueChange={(value) => setAuthType(value as AuthType)}
+              >
+                <SelectTrigger id="authType">
+                  <SelectValue placeholder="Select authentication type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AUTH_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="clientId">Client ID</Label>
               <Input
                 id="clientId"
@@ -92,17 +132,42 @@ export function Login() {
                 placeholder="Enter your client secret"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="realm">Realm</Label>
-              <Input
-                id="realm"
-                type="text"
-                value={realm}
-                onChange={(e) => setRealm(e.target.value)}
-                required
-                placeholder="Enter your realm"
-              />
-            </div>
+            {authType === "internal" ? (
+              <div className="space-y-2">
+                <Label htmlFor="polarisRealm">Polaris Realm</Label>
+                <Input
+                  id="polarisRealm"
+                  type="text"
+                  value={polarisRealm}
+                  onChange={(e) => setPolarisRealm(e.target.value)}
+                  placeholder="Enter your Polaris realm"
+                />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="keycloakRealm">Keycloak Realm</Label>
+                  <Input
+                    id="keycloakRealm"
+                    type="text"
+                    value={keycloakRealm}
+                    onChange={(e) => setKeycloakRealm(e.target.value)}
+                    required
+                    placeholder="Enter your Keycloak realm (e.g., iceberg)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="polarisRealm">Polaris Realm</Label>
+                  <Input
+                    id="polarisRealm"
+                    type="text"
+                    value={polarisRealm}
+                    onChange={(e) => setPolarisRealm(e.target.value)}
+                    placeholder="Enter your Polaris realm (optional)"
+                  />
+                </div>
+              </>
+            )}
             {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 {error}

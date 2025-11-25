@@ -51,6 +51,27 @@ export default defineConfig({
           }
         },
       },
+      '/keycloak': {
+        target: process.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/keycloak/, ''),
+        configure: (proxy) => {
+          // Only log in development mode
+          if (process.env.NODE_ENV === 'development') {
+            proxy.on('error', (err) => {
+              console.error('Keycloak proxy error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const target = process.env.VITE_KEYCLOAK_URL || 'http://localhost:8080';
+              console.log('🔐 Keycloak Proxying:', req.method, req.url, '→', target + proxyReq.path);
+            });
+            proxy.on('proxyRes', (proxyRes, req) => {
+              console.log('Keycloak Response:', proxyRes.statusCode, req.url);
+            });
+          }
+        },
+      },
     },
   },
 })
